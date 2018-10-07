@@ -27,6 +27,89 @@ CMatrixCal::CMatrixCal(int m, int n)
 		IS_SQURE = FALSE;
 	}
 }
+CMatrixCal::CMatrixCal(float** resoure,int m, int n)
+{
+	name = "普通矩阵";
+	row_m = m;
+	col_n = n;
+	data =new float*[m];   
+    for(int i=0;i<m;++i)  
+	{
+		data[i]=new float[n];
+		for(int j=0;j<n;j++)
+		{
+			data[i][j] = resoure[i][j];
+		}
+	}  
+	IS_INIT = TRUE;
+	if(m == n)
+	{
+		IS_SQURE = TRUE;
+	}
+	else
+	{
+		IS_SQURE = FALSE;
+	}
+}
+CMatrixCal::CMatrixCal(int m,int n,CString style)//初始化各种形状的模板矩阵
+{
+	if(style == "circle" && m==n)
+	{
+		float R = (m-1)/2.0;
+		name = "圆形模板矩阵";
+		row_m = m;
+		col_n = n;
+		data =new float*[m];   
+		for(int i=0;i<m;++i)  
+		{
+			data[i]=new float[n];
+			for(int j=0;j<n;j++)
+			{
+				if(((float)(i-R)*(float)(i-R)+(float)(j-R)*(float)(j-R))<=(R*R))
+				{
+					data[i][j] = 1;
+				}
+				else
+				{
+					data[i][j] = 0;
+				}
+			}
+		}  
+		IS_INIT = TRUE;
+		if(m == n)
+		{
+			IS_SQURE = TRUE;
+		}
+		else
+		{
+			IS_SQURE = FALSE;
+		}
+	}
+	else
+	{
+		name = "普通矩阵";
+		row_m = m;
+		col_n = n;
+		data =new float*[m];   
+		for(int i=0;i<m;++i)  
+		{
+			data[i]=new float[n];
+			for(int j=0;j<n;j++)
+			{
+				data[i][j] = 0;
+			}
+		}  
+		IS_INIT = TRUE;
+		if(m == n)
+		{
+			IS_SQURE = TRUE;
+		}
+		else
+		{
+			IS_SQURE = FALSE;
+		}
+	}
+}
 CMatrixCal::CMatrixCal()
 {
 	IS_INIT = FALSE;
@@ -34,9 +117,15 @@ CMatrixCal::CMatrixCal()
 
 CMatrixCal::~CMatrixCal(void)
 {
-	//for(int i = 0; i < row_m; i++) //分级释放堆上的数组内存
- //   {
- //       delete []data[i];
+	//if(data != NULL)
+	//{
+	//	for(int i = 0; i < row_m; i++) //分级释放堆上的数组内存
+	//	{
+	//		delete []data[i];
+	//		data[i] = NULL;
+	//	}
+	//	delete []data;
+	//	data = NULL;
 	//}
 }
 void CMatrixCal::InitMatrix(int m, int n)
@@ -92,6 +181,7 @@ void CMatrixCal::Release()
 		for(int i = 0; i < row_m; i++) //分级释放堆上的数组内存
 		{
 		   delete []data[i];
+		   data[i]=NULL;
 		}
 		delete []data;
 		data = NULL;
@@ -126,8 +216,8 @@ void CMatrixCal::SetAllData(float num)//把所有值设成num
 		}
 	}
 }
-//把第row行（从1开始算起）（取值0~row-1）设成一个数值
-void CMatrixCal::SetRowData(int row, float num)//把第row行（从1开始算起）（取值0~row-1）设成一个数值
+//把第row行（从1开始算起）（取值1~row）设成一个数值
+void CMatrixCal::SetRowData(int row, float num)//把第row行（从1开始算起）（取值1~row）设成一个数值
 {
 	if(row<=0 || row> row_m)
 	{
@@ -141,8 +231,8 @@ void CMatrixCal::SetRowData(int row, float num)//把第row行（从1开始算起）（取值0
 		data[row-1][n] = num;
 	}
 }
-//把第col列（从1开始算起）（取值0~col-1）设成一个数值
-void CMatrixCal::SetColData(int col, float num)//把第col列（从1开始算起）（取值0~col-1）设成一个数值
+//把第col列（从1开始算起）（取值1~col）设成一个数值
+void CMatrixCal::SetColData(int col, float num)//把第col列（从1开始算起）（取值1~col）设成一个数值
 {
 	if(col<=0 || col> col_n)
 	{
@@ -155,6 +245,49 @@ void CMatrixCal::SetColData(int col, float num)//把第col列（从1开始算起）（取值0
 	{
 		data[m][col-1] = num;
 	}
+}
+//把M矩阵中从row_begin到row_end行、col_begin到col_end列提取出来，生成新的矩阵（从1开始算起）
+CMatrixCal CMatrixCal::SeletctPartMatrixByRowCol(CMatrixCal M, int row_begin,int row_end,int col_begin,int col_end)
+{
+	
+	if(col_begin<=0 || row_begin<=0)
+	{
+		CString str;
+		str.Format("起始行：%d 起始列：%d，不能小于0",row_begin,col_begin);
+		AfxMessageBox(str);
+		CMatrixCal M_error(1,1);
+		M_error.ChangeName("错误矩阵");
+		return M_error;
+	}
+	else if(col_end>M.col_n || row_end>M.row_m)
+	{
+		CString str;
+		str.Format("终止行：%d 终止列：%d，原矩阵行数：%d,原矩阵列数：%d，超出范围",row_end,col_end,M.row_m,M.col_n);
+		AfxMessageBox(str);
+		CMatrixCal M_error(1,1);
+		M_error.ChangeName("错误矩阵");
+		return M_error;
+	}
+	else if((col_end - col_begin)<0 || (row_end - row_begin)<0)
+	{
+		CString str;
+		str.Format("起始行：%d,终止行：%d,起始列：%d,终止列：%d,超出范围",row_begin,row_end,col_begin,col_end);
+		AfxMessageBox(str);
+		CMatrixCal M_error(1,1);
+		M_error.ChangeName("错误矩阵");
+		return M_error;
+	}
+	int row_new = row_end - row_begin + 1;
+	int col_new = col_end - col_begin + 1;
+	CMatrixCal M_new(row_new,col_new);
+	for(int m=0;m<row_new;m++)
+	{
+		for(int n=0;n<col_new;n++)
+		{
+			M_new.data[m][n] = M.data[row_begin-1+m][col_begin-1+n];
+		}
+	}
+	return M_new;
 }
 float CMatrixCal::Det_3D(CMatrixCal Matrix)
 {
@@ -235,7 +368,16 @@ float CMatrixCal::Det(CMatrixCal Matrix)
 }
 float CMatrixCal::Det()
 {
+	if(!IS_SQURE)
+	{
+		AfxMessageBox("矩阵不是方阵，无法计算行列式");
+		return -996699;
+	}
 	float res = 0;
+	if(row_m == 2)
+	{
+		res = data[0][0]*data[1][1] - data[0][1]*data[1][0];
+	}
 	if(row_m == 3)
 	{
 		res = Det_3D();
