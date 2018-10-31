@@ -14,9 +14,17 @@ public:
 	void releasedata(float** p,int m);
 	CMatrixCal LoadMatrix(float** data,int width, int height);//把一个二维数组构建成矩阵
 	void InitMatrix(int m, int n);//初始化矩阵，与第一构造函数等同。第二构造时需要初始化
+	void InitMatrix(int m, int n,CString style);//初始化矩阵，与第一构造函数等同。第二构造时需要初始化
 	void Release();//释放矩阵数据，初始化标签取消
+	void ShowDataShort();//显示矩阵值
 	void ShowData();//显示矩阵值
+	void ShowRowData(int Row);//显示矩阵第Row行（从1起算）值
+	void ShowColData(int Col);//显示矩阵第Col列（从1起算）值
+	void ShowData(int Row, int Col);//显示矩阵第Row行（从1起算）第Col列（从1起算）值
 	void ShowStruct();//显示矩阵结构
+	void ShowMaxMin();//显示矩阵极值
+	void ShowMaxMin_Row(int Row);//显示矩阵第Row行（从1起算）极值
+	void ShowMaxMin_Col(int Col);//显示矩阵第Col列（从1起算）极值
 
 	//矩阵参数
 	int row_m;//行数
@@ -46,6 +54,23 @@ public:
 	void ChangeName(CString str);//矩阵更新名称
 	float Trace();//求迹运算
 	float SumAll();//矩阵所有元素求和
+	float SumRow(int row);//对第row行求和，row从1开始计算；
+	float SumCol(int col);//对第col列求和，col从1开始计算；
+	CMatrixCal SumRow_toCol(CMatrixCal M);//将矩阵行求和，生成列向量矩阵；
+	void SumRow_toCol();//将矩阵行求和，生成列向量矩阵；
+	CMatrixCal SumCol_toRow(CMatrixCal M);//将矩阵列求和，生成行向量矩阵；
+	void SumCol_toRow();//将矩阵列求和，生成行向量矩阵；
+	CMatrixCal OppositeMatrix(CMatrixCal Matrix);//取M = -Matrix，取相反矩阵
+	void OppositeMatrix();//取M = -M，取相反矩阵
+	float Max_ofAll();//取整个矩阵的最大值
+	float Min_ofAll();//取整个矩阵的最小值
+	float Max_ofRow(int Row);//取矩阵第Row行（从1起算）的最大值
+	float Min_ofRow(int Row);//取矩阵第Row行（从1起算）的最小值
+	float Max_ofCol(int Col);//取矩阵第Col列（从1起算）的最大值
+	float Min_ofCol(int Col);//取矩阵第Col列（从1起算）的最小值
+
+	void Segmente_toBinary(float t);//当矩阵数值>t时，赋值为1，否则为0
+	void Check_LargetValue(float t);//当矩阵数值>t时，赋值为0，其余不变
 	//叠加行列处理
 	CMatrixCal AddRow(CMatrixCal M1, CMatrixCal M2);//把同列数矩阵M2矩阵，加到M1的下方
 	void AddRowBy(CMatrixCal M);//把同列数矩阵M矩阵，加到原矩阵的下方
@@ -59,6 +84,11 @@ public:
 	void PlusBy(CMatrixCal Matrix);//M = M+Matrix
 	CMatrixCal Plus(CMatrixCal M1, float p);//M=M1+M2 同型矩阵加法
 	void PlusBy(float p);//M = M+Matrix
+	CMatrixCal Plus_MatrixByColV(CMatrixCal M1, CMatrixCal V);//M=M1+V,V是列向量；
+	void Plus_MatrixByColV(CMatrixCal V);//M = M+V;V是列向量
+	CMatrixCal Plus_MatrixByRowV(CMatrixCal M1, CMatrixCal V);//M=M1+V,V是行向量；
+	void Plus_MatrixByRowV(CMatrixCal V);//M = M+V;V是行向量
+
 
 	CMatrixCal Sub(CMatrixCal M1, CMatrixCal M2);//M=M1-M2 同型矩阵减法
 	void SubBy(CMatrixCal Matrix);//M = M-Matrix
@@ -74,7 +104,8 @@ public:
 	
 
 
-
-	
+	//附加功能
+	double gaussrand(double,double);//生成单点高斯噪声
+	double randomUniform(double dMinValue,double dMaxValue);//均匀分布
 };
 

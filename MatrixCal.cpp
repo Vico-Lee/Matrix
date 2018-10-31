@@ -51,7 +51,9 @@ CMatrixCal::CMatrixCal(float** resoure,int m, int n)
 		IS_SQURE = FALSE;
 	}
 }
-CMatrixCal::CMatrixCal(int m,int n,CString style)//³õÊ¼»¯¸÷ÖÖĞÎ×´µÄÄ£°å¾ØÕó
+
+//³õÊ¼»¯¸÷ÖÖĞÎ×´µÄÄ£°å¾ØÕó:"circle"Ô²ĞÎ01¶şÖµÄ£°å£»"norm"¾ùÔÈ³õÊ¼»¯0-0.1£»"Gauss"¾ùÖµÎª0£¬±ê×¼²îÎª1
+CMatrixCal::CMatrixCal(int m,int n,CString style)
 {
 	if(style == "circle" && m==n)
 	{
@@ -73,6 +75,54 @@ CMatrixCal::CMatrixCal(int m,int n,CString style)//³õÊ¼»¯¸÷ÖÖĞÎ×´µÄÄ£°å¾ØÕó
 				{
 					data[i][j] = 0;
 				}
+			}
+		}  
+		IS_INIT = TRUE;
+		if(m == n)
+		{
+			IS_SQURE = TRUE;
+		}
+		else
+		{
+			IS_SQURE = FALSE;
+		}
+	}
+	else if(style == "norm")
+	{
+		name = "ÆÕÍ¨¾ØÕó";
+		row_m = m;
+		col_n = n;
+		data =new float*[m];   
+		for(int i=0;i<m;++i)  
+		{
+			data[i]=new float[n];
+			for(int j=0;j<n;j++)
+			{
+				data[i][j] = randomUniform(0.0,1.0)*0.1;
+			}
+		}  
+		IS_INIT = TRUE;
+		if(m == n)
+		{
+			IS_SQURE = TRUE;
+		}
+		else
+		{
+			IS_SQURE = FALSE;
+		}
+	}
+	else if(style == "gauss")
+	{
+		name = "ÆÕÍ¨¾ØÕó";
+		row_m = m;
+		col_n = n;
+		data =new float*[m];   
+		for(int i=0;i<m;++i)  
+		{
+			data[i]=new float[n];
+			for(int j=0;j<n;j++)
+			{
+				data[i][j] = gaussrand(0,1)*0.01;
 			}
 		}  
 		IS_INIT = TRUE;
@@ -152,6 +202,115 @@ void CMatrixCal::InitMatrix(int m, int n)
 		IS_SQURE = FALSE;
 	}
 }
+
+//³õÊ¼»¯¸÷ÖÖĞÎ×´µÄÄ£°å¾ØÕó:"circle"Ô²ĞÎ01¶şÖµÄ£°å£»"norm"¾ùÔÈ³õÊ¼»¯0-0.1£»"Gauss"¾ùÖµÎª0£¬±ê×¼²îÎª1
+void CMatrixCal::InitMatrix(int m, int n,CString style)//³õÊ¼»¯¾ØÕó£¬ÓëµÚÒ»¹¹Ôìº¯ÊıµÈÍ¬¡£µÚ¶ş¹¹ÔìÊ±ĞèÒª³õÊ¼»¯
+{
+	if(style == "circle" && m==n)
+	{
+		float R = (m-1)/2.0;
+		name = "Ô²ĞÎÄ£°å¾ØÕó";
+		row_m = m;
+		col_n = n;
+		data =new float*[m];   
+		for(int i=0;i<m;++i)  
+		{
+			data[i]=new float[n];
+			for(int j=0;j<n;j++)
+			{
+				if(((float)(i-R)*(float)(i-R)+(float)(j-R)*(float)(j-R))<=(R*R))
+				{
+					data[i][j] = 1;
+				}
+				else
+				{
+					data[i][j] = 0;
+				}
+			}
+		}  
+		IS_INIT = TRUE;
+		if(m == n)
+		{
+			IS_SQURE = TRUE;
+		}
+		else
+		{
+			IS_SQURE = FALSE;
+		}
+	}
+	else if(style == "norm")
+	{
+		name = "ÆÕÍ¨¾ØÕó";
+		row_m = m;
+		col_n = n;
+		data =new float*[m];   
+		for(int i=0;i<m;++i)  
+		{
+			data[i]=new float[n];
+			for(int j=0;j<n;j++)
+			{
+				data[i][j] = randomUniform(0.0,1.0)*0.01;
+			}
+		}  
+		IS_INIT = TRUE;
+		if(m == n)
+		{
+			IS_SQURE = TRUE;
+		}
+		else
+		{
+			IS_SQURE = FALSE;
+		}
+	}
+	else if(style == "gauss")
+	{
+		name = "ÆÕÍ¨¾ØÕó";
+		row_m = m;
+		col_n = n;
+		data =new float*[m];   
+		for(int i=0;i<m;++i)  
+		{
+			data[i]=new float[n];
+			for(int j=0;j<n;j++)
+			{
+				data[i][j] = gaussrand(0,1)*0.01;
+			}
+		}  
+		IS_INIT = TRUE;
+		if(m == n)
+		{
+			IS_SQURE = TRUE;
+		}
+		else
+		{
+			IS_SQURE = FALSE;
+		}
+	}
+	else
+	{
+		name = "ÆÕÍ¨¾ØÕó";
+		row_m = m;
+		col_n = n;
+		data =new float*[m];   
+		for(int i=0;i<m;++i)  
+		{
+			data[i]=new float[n];
+			for(int j=0;j<n;j++)
+			{
+				data[i][j] = 0;
+			}
+		}  
+		IS_INIT = TRUE;
+		if(m == n)
+		{
+			IS_SQURE = TRUE;
+		}
+		else
+		{
+			IS_SQURE = FALSE;
+		}
+	}
+}
 float** CMatrixCal::init_floatmatrix(int m, int n)
 {
 	float** res =new float*[m];   
@@ -170,6 +329,7 @@ void CMatrixCal::releasedata(float**p,int m)
 	for(int i = 0; i < m; i++) //·Ö¼¶ÊÍ·Å¶ÑÉÏµÄÊı×éÄÚ´æ
     {
         delete []p[i];
+		p[i] = NULL;
 	}
 	delete []p;
 	p=NULL;
@@ -200,6 +360,7 @@ BOOL CMatrixCal::CheckSqure()//¼ì²éÊÇ·ñ·½Õó
 		{
 			IS_SQURE = FALSE;
 		}
+		return IS_SQURE;
 	}
 	else
 	{
@@ -534,17 +695,153 @@ CMatrixCal CMatrixCal::LoadMatrix(float** data,int width, int height)
 void CMatrixCal::ShowData()
 {
 	CString str;
+	str = name+"\n";
 	for(int i=0;i<row_m;i++)
 	{
 		for(int j=0;j<col_n;j++)
 		{
 			CString temp;
-			temp.Format("%.3f	",data[i][j]);
+			temp.Format("%.8f	",data[i][j]);
 			str = str+temp;
 		}
 		str = str+"\n";
 	}
-	str+=name;
+	AfxMessageBox(str);
+}
+void CMatrixCal::ShowDataShort()
+{
+	CString str;
+	str = name+"\n";
+	for(int i=0;i<row_m;i++)
+	{
+		for(int j=0;j<col_n;j++)
+		{
+			CString temp;
+			temp.Format("%.1f	",data[i][j]);
+			str = str+temp;
+		}
+		str = str+"\n";
+	}
+	AfxMessageBox(str);
+}
+
+//ÏÔÊ¾¾ØÕó¼«Öµ
+void CMatrixCal::ShowMaxMin()
+{
+	float max,min;
+	max = Max_ofAll();
+	min = Min_ofAll();
+	CString str;
+	str = name;
+	CString temp;
+	temp.Format("\n¾ØÕó×î´óÖµ£º%f   ¾ØÕó×îĞ¡Öµ£º%f",max,min);
+	str += temp;
+	AfxMessageBox(str);
+}
+
+//ÏÔÊ¾¾ØÕóµÚRowĞĞ£¨´Ó1ÆğËã£©¼«Öµ
+void CMatrixCal::ShowMaxMin_Row(int Row)
+{
+	if(Row < 1 || Row > row_m)
+	{
+		CString str;
+		str.Format("¾ØÕóÏÔÊ¾ĞĞ¼«Öµ£¬È¡Öµ·¶Î§¡°%d-%d¡±,µ±Ç°·¶Î§£º%d",1,row_m,Row);
+		AfxMessageBox(str);
+		return;
+	}
+	float max,min;
+	max = Max_ofRow(Row);
+	min = Min_ofRow(Row);
+
+	CString str;
+	str = name;
+	CString temp;
+	temp.Format("\n¾ØÕóµÚ%dĞĞ£º×î´óÖµ£º%f   ¾ØÕó×îĞ¡Öµ£º%f",Row,max,min);
+	str += temp;
+	AfxMessageBox(str);
+}
+//ÏÔÊ¾¾ØÕóµÚColÁĞ£¨´Ó1ÆğËã£©¼«Öµ
+void CMatrixCal::ShowMaxMin_Col(int Col)
+{
+	if(Col < 1 || Col > col_n)
+	{
+		CString str;
+		str.Format("¾ØÕóÏÔÊ¾ÁĞ¼«Öµ£¬È¡Öµ·¶Î§¡°%d-%d¡±,µ±Ç°·¶Î§£º%d",1,col_n,Col);
+		AfxMessageBox(str);
+		return;
+	}
+	float max,min;
+	max = Max_ofCol(Col);
+	min = Min_ofCol(Col);
+
+	CString str;
+	str = name;
+	CString temp;
+	temp.Format("\n¾ØÕóµÚ%dÁĞ£º×î´óÖµ£º%f   ¾ØÕó×îĞ¡Öµ£º%f",Col,max,min);
+	str += temp;
+	AfxMessageBox(str);
+}
+//ÏÔÊ¾¾ØÕóµÚRowĞĞ£¨´Ó1ÆğËã£©Öµ
+void CMatrixCal::ShowRowData(int Row)
+{
+	if(Row < 1 || Row > row_m)
+	{
+		CString str;
+		str.Format("¾ØÕóÏÔÊ¾ĞĞÊı¾İ£¬È¡Öµ·¶Î§¡°%d-%d¡±,µ±Ç°·¶Î§£º%d",1,row_m,Row);
+		AfxMessageBox(str);
+		return;
+	}
+	CString str;
+	str = name;
+	CString temp;
+	temp.Format("\nµÚ%dĞĞÊı¾İ\n",Row);
+	str += temp;
+	for(int n=0;n<col_n;n++)
+	{
+		temp.Format("M%d%d: %.8f ",Row, n+1, data[Row-1][n]);
+		str = str+temp;
+	}
+	AfxMessageBox(str);
+}
+
+//ÏÔÊ¾¾ØÕóµÚColÁĞ£¨´Ó1ÆğËã£©Öµ
+void CMatrixCal::ShowColData(int Col)
+{
+	if(Col < 1 || Col > col_n)
+	{
+		CString str;
+		str.Format("¾ØÕóÏÔÊ¾ÁĞÊı¾İ£¬È¡Öµ·¶Î§¡°%d-%d¡±,µ±Ç°·¶Î§£º%d",1,col_n,Col);
+		AfxMessageBox(str);
+		return;
+	}
+	CString str;
+	str = name;
+	CString temp;
+	temp.Format("\nµÚ%dÁĞÊı¾İ\n",Col);
+	str += temp;
+	for(int m=0;m<row_m;m++)
+	{
+		temp.Format("M%d%d:%.8f | ", m+1, Col, data[m][Col-1]);
+		str = str+temp;
+	}
+	AfxMessageBox(str);
+}
+
+//ÏÔÊ¾¾ØÕóµÚRowĞĞ£¨´Ó1ÆğËã£©µÚColÁĞ£¨´Ó1ÆğËã£©Öµ
+void CMatrixCal::ShowData(int Row, int Col)
+{
+	if(Col < 1 || Col > col_n || Row < 1 || Row > row_m)
+	{
+		CString str;
+		str.Format("¾ØÕóÏÔÊ¾ÁĞÊı¾İ£¬ĞĞÈ¡Öµ·¶Î§¡°%d-%d¡±,ÁĞÈ¡Öµ·¶Î§¡°%d-%d¡±,µ±Ç°·¶Î§£º%d-%d",1,row_m,1,col_n,Row,Col);
+		AfxMessageBox(str);
+		return;
+	}
+	CString str;
+	str = name;
+	CString temp;
+	temp.Format("\nµÚ%dĞĞµÚ%dÁĞÊı¾İ: %f",Row,Col,data[Row-1][Col-1]);
+	str += temp;
 	AfxMessageBox(str);
 }
 void CMatrixCal::ShowStruct()//ÏÔÊ¾¾ØÕó½á¹¹
@@ -573,6 +870,8 @@ void CMatrixCal::CopyMatrixData(CMatrixCal M)
 		}
 	}
 }
+
+//M1+M2
 CMatrixCal CMatrixCal::Plus(CMatrixCal M1, CMatrixCal M2)//M1+M2
 {
 	CMatrixCal M(M1.row_m,M1.col_n);
@@ -632,6 +931,93 @@ void CMatrixCal::PlusBy(float p)//M = M+Matrix
 		for(int n=0;n<col_n;n++)
 		{
 			data[m][n] = data[m][n]+p;
+		}
+	}
+}
+//M=M1+V,VÊÇÁĞÏòÁ¿£»
+CMatrixCal CMatrixCal::Plus_MatrixByColV(CMatrixCal M1, CMatrixCal V)
+{
+	CMatrixCal M(M1.row_m,M1.col_n);
+	if(M1.row_m != V.row_m || V.col_n != 1)
+	{
+		CString str;
+		str.Format("¾ØÕó¹¹ĞÍ²»Í¬£¨¾ØÕó+ÁĞÏòÁ¿£©£ºM1:%dĞĞ%dÁĞ£¬V£º%dĞĞ%dÁĞ¡£",M1.row_m,M1.col_n,V.row_m,V.col_n);
+		AfxMessageBox(str);
+	}
+	else
+	{
+		for(int m=0;m<M.row_m;m++)
+		{
+			for(int n=0;n<M.col_n;n++)
+			{
+				M.data[m][n] = M1.data[m][n]+V.data[m][0];
+			}
+		}
+	}
+	return M;
+}
+
+//M = M+V;VÊÇÁĞÏòÁ¿
+void CMatrixCal::Plus_MatrixByColV(CMatrixCal V)
+{
+	if(row_m != V.row_m || V.col_n != 1)
+	{
+		CString str;
+		str.Format("¾ØÕó¹¹ĞÍ²»Í¬£¨¾ØÕó+ÁĞÏòÁ¿£©£ºµ±Ç°¾ØÕó:%dĞĞ%dÁĞ£¬V£º%dĞĞ%dÁĞ¡£",row_m,col_n,V.row_m,V.col_n);
+		AfxMessageBox(str);
+	}
+	else
+	{
+		for(int m=0;m<row_m;m++)
+		{
+			for(int n=0;n<col_n;n++)
+			{
+				data[m][n] = data[m][n]+V.data[m][0];
+			}
+		}
+	}
+}
+
+//M=M1+V,VÊÇĞĞÏòÁ¿£»
+CMatrixCal CMatrixCal::Plus_MatrixByRowV(CMatrixCal M1, CMatrixCal V)
+{
+	CMatrixCal M(M1.row_m,M1.col_n);
+	if(M1.col_n != V.col_n || V.row_m != 1)
+	{
+		CString str;
+		str.Format("¾ØÕó¹¹ĞÍ²»Í¬£¨¾ØÕó+ĞĞÏòÁ¿£©£ºM1:%dĞĞ%dÁĞ£¬V£º%dĞĞ%dÁĞ¡£",M1.row_m,M1.col_n,V.row_m,V.col_n);
+		AfxMessageBox(str);
+	}
+	else
+	{
+		for(int m=0;m<M.row_m;m++)
+		{
+			for(int n=0;n<M.col_n;n++)
+			{
+				M.data[m][n] = M1.data[m][n]+V.data[0][n];
+			}
+		}
+	}
+	return M;
+}
+
+//M = M+V;VÊÇĞĞÏòÁ¿
+void CMatrixCal::Plus_MatrixByRowV(CMatrixCal V)
+{
+	if(col_n != V.col_n || V.row_m != 1)
+	{
+		CString str;
+		str.Format("¾ØÕó¹¹ĞÍ²»Í¬£¨¾ØÕó+ĞĞÏòÁ¿£©£ºµ±Ç°¾ØÕó:%dĞĞ%dÁĞ£¬V£º%dĞĞ%dÁĞ¡£",row_m,col_n,V.row_m,V.col_n);
+		AfxMessageBox(str);
+	}
+	else
+	{
+		for(int m=0;m<row_m;m++)
+		{
+			for(int n=0;n<col_n;n++)
+			{
+				data[m][n] = data[m][n]+V.data[0][n];
+			}
 		}
 	}
 }
@@ -756,6 +1142,8 @@ void CMatrixCal::DotBy(CMatrixCal M)//Matrix=Matrixµã³ËM
 		}
 	}
 }
+
+//M=M1-M2
 CMatrixCal CMatrixCal::Sub(CMatrixCal M1, CMatrixCal M2)//M=M1-M2
 {
 	CMatrixCal M(M1.row_m,M1.col_n);
@@ -777,6 +1165,8 @@ CMatrixCal CMatrixCal::Sub(CMatrixCal M1, CMatrixCal M2)//M=M1-M2
 	}
 	return M;
 }
+
+//M = M-Matrix
 void CMatrixCal::SubBy(CMatrixCal Matrix)//M = M-Matrix
 {
 	if(row_m != Matrix.row_m || col_n != Matrix.col_n)
@@ -796,6 +1186,8 @@ void CMatrixCal::SubBy(CMatrixCal Matrix)//M = M-Matrix
 		}
 	}
 }
+
+//¾ØÕóËùÓĞÔªËØÇóºÍ
 float CMatrixCal::SumAll()
 {
 	float res = 0;
@@ -808,6 +1200,288 @@ float CMatrixCal::SumAll()
 	}
 	return res;
 }
+
+//¶ÔµÚrowĞĞÇóºÍ£¬row´Ó1¿ªÊ¼¼ÆËã£»
+float CMatrixCal::SumRow(int row)
+{
+	if(row < 1 || row > row_m)
+	{
+		CString str;
+		str.Format("¾ØÕó¶ÔĞĞÇóºÍ£¬È¡Öµ·¶Î§¡°%d-%d¡±,µ±Ç°·¶Î§£º%d",1,row_m,row);
+		AfxMessageBox(str);
+		return -996699;
+	}
+	float res = 0;
+	for(int n=0;n<col_n;n++)
+	{
+		res = res+data[row-1][n];
+	}
+	return res;
+}
+
+//¶ÔµÚcolÁĞÇóºÍ£¬col´Ó1¿ªÊ¼¼ÆËã£»
+float CMatrixCal::SumCol(int col)
+{
+	if(col < 1 || col > col_n)
+	{
+		CString str;
+		str.Format("¾ØÕó¶ÔÁĞÇóºÍ£¬È¡Öµ·¶Î§¡°%d-%d¡±,µ±Ç°·¶Î§£º%d",1,col_n,col);
+		AfxMessageBox(str);
+		return -996699;
+	}
+	float res = 0;
+	for(int m=0;m<row_m;m++)
+	{
+		res = res+data[m][col-1];
+	}
+	return res;
+}
+
+//½«¾ØÕóĞĞÇóºÍ£¬Éú³ÉÁĞÏòÁ¿¾ØÕó£»
+CMatrixCal CMatrixCal::SumRow_toCol(CMatrixCal M)
+{
+	CMatrixCal Res(M.row_m,1);
+	for(int m=0;m<M.row_m;m++)
+	{
+		for(int n=0;n<M.col_n;n++)
+		{
+			Res.data[m][0] = Res.data[m][0]+M.data[m][n];
+		}
+	}
+	return Res;
+}
+
+//½«¾ØÕóĞĞÇóºÍ£¬Éú³ÉÁĞÏòÁ¿¾ØÕó£»
+void CMatrixCal::SumRow_toCol()
+{
+	int m_new = row_m;
+	int n_new = 1;
+	float** temp = init_floatmatrix(m_new,n_new);
+	for(int m=0;m<m_new;m++)
+	{
+		temp[m][0] = 0;
+		for(int n=0;n<col_n;n++)
+		{
+			temp[m][0] = temp[m][0] + data[m][n];
+		}
+	}
+	releasedata(data,row_m);
+	data = temp;
+	row_m = m_new;
+	col_n = n_new;
+}
+
+//½«¾ØÕóÁĞÇóºÍ£¬Éú³ÉĞĞÏòÁ¿¾ØÕó£»
+CMatrixCal CMatrixCal::SumCol_toRow(CMatrixCal M)
+{
+	CMatrixCal Res(1,M.col_n);
+	for(int m=0;m<M.row_m;m++)
+	{
+		for(int n=0;n<M.col_n;n++)
+		{
+			Res.data[0][n] = Res.data[0][n]+M.data[m][n];
+		}
+	}
+	return Res;
+}
+
+
+//½«¾ØÕóÁĞÇóºÍ£¬Éú³ÉĞĞÏòÁ¿¾ØÕó£»
+void CMatrixCal::SumCol_toRow()
+{
+	int m_new = 1;
+	int n_new = col_n;
+	float** temp = init_floatmatrix(m_new,n_new);
+	for(int n=0;n<n_new;n++)
+	{
+		temp[0][n] = 0;
+		for(int m=0;m<row_m;m++)
+		{
+			temp[0][n] = temp[m][0] + data[m][n];
+		}
+	}
+	releasedata(data,row_m);
+	data = temp;
+	row_m = m_new;
+	col_n = n_new;
+}
+
+//È¡M = -Matrix£¬È¡Ïà·´¾ØÕó
+CMatrixCal CMatrixCal::OppositeMatrix(CMatrixCal Matrix)
+{
+	CMatrixCal Res(Matrix.row_m,Matrix.col_n);
+	for(int m=0;m<Res.row_m;m++)
+	{
+		for(int n=0;n<Res.col_n;n++)
+		{
+			Res.data[m][n] = -Matrix.data[m][n];
+		}
+	}
+	return Res;
+}
+
+//È¡M = -M£¬È¡Ïà·´¾ØÕó
+void CMatrixCal::OppositeMatrix()
+{
+	for(int m=0;m<row_m;m++)
+	{
+		for(int n=0;n<col_n;n++)
+		{
+			data[m][n] = -data[m][n];
+		}
+	}
+}
+
+//È¡Õû¸ö¾ØÕóµÄ×î´óÖµ
+float CMatrixCal::Max_ofAll()
+{
+	float res = data[0][0];
+	for(int m=0;m<row_m;m++)
+	{
+		for(int n=0;n<col_n;n++)
+		{
+			if(res < data[m][n])
+			{
+				res = data[m][n];
+			}
+		}
+	}
+	return res;
+}
+
+//È¡Õû¸ö¾ØÕóµÄ×îĞ¡Öµ
+float CMatrixCal::Min_ofAll()
+{
+	float res = data[0][0];
+	for(int m=0;m<row_m;m++)
+	{
+		for(int n=0;n<col_n;n++)
+		{
+			if(res > data[m][n])
+			{
+				res = data[m][n];
+			}
+		}
+	}
+	return res;
+}
+
+//È¡¾ØÕóµÚRowĞĞ£¨´Ó1ÆğËã£©µÄ×î´óÖµ
+float CMatrixCal::Max_ofRow(int Row)
+{
+	float res = data[0][0];;
+	if(Row < 1 || Row > row_m)
+	{
+		CString str;
+		str.Format("¼ÆËãĞĞ×î´óÖµ£¬È¡Öµ·¶Î§¡°%d-%d¡±,µ±Ç°·¶Î§£º%d",1,row_m,Row);
+		AfxMessageBox(str);
+		res = -996699;
+	}
+	for(int n=0;n<col_n;n++)
+	{
+		if(res < data[Row-1][n])
+		{
+			res = data[Row-1][n];
+		}
+	}
+	return res;
+}
+//È¡¾ØÕóµÚRowĞĞ£¨´Ó1ÆğËã£©µÄ×îĞ¡Öµ
+float CMatrixCal::Min_ofRow(int Row)
+{
+	float res = data[0][0];;
+	if(Row < 1 || Row > row_m)
+	{
+		CString str;
+		str.Format("¼ÆËãĞĞ×îĞ¡Öµ£¬È¡Öµ·¶Î§¡°%d-%d¡±,µ±Ç°·¶Î§£º%d",1,row_m,Row);
+		AfxMessageBox(str);
+		res = -996699;
+	}
+	for(int n=0;n<col_n;n++)
+	{
+		if(res > data[Row-1][n])
+		{
+			res = data[Row-1][n];
+		}
+	}
+	return res;
+}
+
+//È¡¾ØÕóµÚColÁĞ£¨´Ó1ÆğËã£©µÄ×î´óÖµ
+float CMatrixCal::Max_ofCol(int Col)
+{
+	float res = data[0][0];;
+	if(Col < 1 || Col > col_n)
+	{
+		CString str;
+		str.Format("¾ØÕóÏÔÊ¾ÁĞÊı¾İ£¬È¡Öµ·¶Î§¡°%d-%d¡±,µ±Ç°·¶Î§£º%d",1,col_n,Col);
+		AfxMessageBox(str);
+		res = -996699;
+	}
+	for(int m=0;m<row_m;m++)
+	{
+		if(res < data[m][Col-1])
+		{
+			res = data[m][Col-1];
+		}
+	}
+	return res;
+}
+
+//È¡¾ØÕóµÚColÁĞ£¨´Ó1ÆğËã£©µÄ×îĞ¡Öµ
+float CMatrixCal::Min_ofCol(int Col)
+{
+	float res = data[0][0];;
+	if(Col < 1 || Col > col_n)
+	{
+		CString str;
+		str.Format("¾ØÕóÏÔÊ¾ÁĞÊı¾İ£¬È¡Öµ·¶Î§¡°%d-%d¡±,µ±Ç°·¶Î§£º%d",1,col_n,Col);
+		AfxMessageBox(str);
+		res = -996699;
+	}
+	for(int m=0;m<row_m;m++)
+	{
+		if(res > data[m][Col-1])
+		{
+			res = data[m][Col-1];
+		}
+	}
+	return res;
+}
+//µ±¾ØÕóÊıÖµ>tÊ±£¬¸³ÖµÎª1£¬·ñÔòÎª0
+void CMatrixCal::Segmente_toBinary(float t)
+{
+	for(int m=0;m<row_m;m++)
+	{
+		for(int n=0;n<col_n;n++)
+		{
+			if(data[m][n]>t)
+			{
+				data[m][n] = 1;
+			}
+			else
+			{
+				data[m][n] = 0;
+			}
+		}
+	}
+}
+
+//µ±¾ØÕóÊıÖµ>tÊ±£¬¸³ÖµÎª0£¬ÆäÓà²»±ä
+void CMatrixCal::Check_LargetValue(float t)
+{
+	for(int m=0;m<row_m;m++)
+	{
+		for(int n=0;n<col_n;n++)
+		{
+			if(data[m][n]>t || data[m][n] < -t)
+			{
+				data[m][n] = gaussrand(0,1)*0.01;
+			}
+		}
+	}
+}
+//°ÑÍ¬ÁĞÊı¾ØÕóM2¾ØÕó£¬¼Óµ½M1µÄÏÂ·½
 CMatrixCal CMatrixCal::AddRow(CMatrixCal M1, CMatrixCal M2)//°ÑÍ¬ÁĞÊı¾ØÕóM2¾ØÕó£¬¼Óµ½M1µÄÏÂ·½
 {
 	CMatrixCal M(M1.row_m+M2.row_m,M1.col_n);
@@ -836,6 +1510,8 @@ CMatrixCal CMatrixCal::AddRow(CMatrixCal M1, CMatrixCal M2)//°ÑÍ¬ÁĞÊı¾ØÕóM2¾ØÕó£
 	}
 	return M;
 }
+
+//°ÑÍ¬ÁĞÊı¾ØÕóM¾ØÕó£¬¼Óµ½Ô­¾ØÕóµÄÏÂ·½
 void CMatrixCal::AddRowBy(CMatrixCal M)//°ÑÍ¬ÁĞÊı¾ØÕóM¾ØÕó£¬¼Óµ½Ô­¾ØÕóµÄÏÂ·½
 {
 	if(col_n != M.col_n)
@@ -869,4 +1545,36 @@ void CMatrixCal::AddRowBy(CMatrixCal M)//°ÑÍ¬ÁĞÊı¾ØÕóM¾ØÕó£¬¼Óµ½Ô­¾ØÕóµÄÏÂ·½
 		row_m = m_new;
 		col_n = n_new;
 	}
+}
+double CMatrixCal::gaussrand(double E_std,double sigma_std)
+{
+	static double V1, V2, S;
+    static int phase = 0;
+    double X;
+     
+    if ( phase == 0 ) {
+        do {
+            double U1 = (double)rand() / RAND_MAX;
+            double U2 = (double)rand() / RAND_MAX;
+             
+            V1 = 2 * U1 - 1;
+            V2 = 2 * U2 - 1;
+            S = V1 * V1 + V2 * V2;
+        } while(S >= 1 || S == 0);
+         
+        X = V1 * sqrt(-2 * log(S) / S);
+    } else
+        X = V2 * sqrt(-2 * log(S) / S);
+         
+    phase = 1 - phase;
+	/*X = X * sigma_std + E_std; */
+	X = X * pow(sigma_std,0.5) + E_std; 
+    return X;
+}
+double CMatrixCal::randomUniform(double dMinValue,double dMaxValue)//¾ùÔÈ·Ö²¼
+{
+	//srand(time(NULL));
+	double pRandomValue = (double)(rand()/(double)RAND_MAX);
+    pRandomValue = pRandomValue*(dMaxValue-dMinValue)+dMinValue;
+    return pRandomValue;
 }

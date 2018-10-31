@@ -22,7 +22,18 @@ float CNeuralNetWorks::ActivationFunction(float z, CString style)
 	}
 	else if(style == "tanh")
 	{
-		a = (pow((float)e_sci,z)-pow((float)e_sci,-z))/(pow((float)e_sci,z)+pow((float)e_sci,-z));
+		if(z>=10)
+		{
+			a=1;
+		}
+		else if(z<=-10)
+		{
+			a=-1;
+		}
+		else
+		{
+			a = (pow((float)e_sci,z)-pow((float)e_sci,-z))/(pow((float)e_sci,z)+pow((float)e_sci,-z));
+		}
 	}
 	else if(style == "ReLU")
 	{
@@ -59,7 +70,18 @@ CMatrixCal CNeuralNetWorks::ActivationFunction(CMatrixCal Z, CString style)
 		{
 			for(int n=0;n<A.col_n;n++)
 			{
-				A.data[m][n] = (pow((float)e_sci,Z.data[m][n])-pow((float)e_sci,-Z.data[m][n]))/(pow((float)e_sci,Z.data[m][n])+pow((float)e_sci,-Z.data[m][n]));
+				if(Z.data[m][n]>=10)
+				{
+					A.data[m][n]=1;
+				}
+				else if(Z.data[m][n]<=-10)
+				{
+					A.data[m][n]=-1;
+				}
+				else
+				{
+					A.data[m][n] = (pow((float)e_sci,Z.data[m][n])-pow((float)e_sci,-Z.data[m][n]))/(pow((float)e_sci,Z.data[m][n])+pow((float)e_sci,-Z.data[m][n]));
+				}
 			}
 		}
 	}
@@ -88,6 +110,70 @@ CMatrixCal CNeuralNetWorks::ActivationFunction(CMatrixCal Z, CString style)
 		AfxMessageBox("激活函数格式出错！\n请检查代码重新编译。");
 	}
 	return A;
+}
+CMatrixCal CNeuralNetWorks::Derivative_Activation(CMatrixCal G, CString style)
+{
+	CMatrixCal G_dot(G.row_m,G.col_n);
+	if(style == "sigmoid")
+	{
+		for(int m=0;m<G_dot.row_m;m++)
+		{
+			for(int n=0;n<G_dot.col_n;n++)
+			{
+				G_dot.data[m][n] = G.data[m][n] - G.data[m][n]*G.data[m][n];
+			}
+		}
+		
+	}
+	else if(style == "tanh")
+	{
+		for(int m=0;m<G_dot.row_m;m++)
+		{
+			for(int n=0;n<G_dot.col_n;n++)
+			{
+				G_dot.data[m][n] = 1 - G.data[m][n]*G.data[m][n];
+			}
+		}
+	}
+	else if(style == "ReLU")
+	{
+		for(int m=0;m<G_dot.row_m;m++)
+		{
+			for(int n=0;n<G_dot.col_n;n++)
+			{
+				if(G.data[m][n]>0)
+				{
+					G_dot.data[m][n] = 1;
+				}
+				else
+				{
+					G_dot.data[m][n] = 0;
+				}
+			}
+		}
+	}
+	else if(style == "Leaky ReLU")
+	{
+		for(int m=0;m<G_dot.row_m;m++)
+		{
+			for(int n=0;n<G_dot.col_n;n++)
+			{
+				if(G.data[m][n]>0)
+				{
+					G_dot.data[m][n] = 1;
+				}
+				else
+				{
+					G_dot.data[m][n] = 0.01;
+				}
+			}
+		}
+	}
+	else
+	{
+		AfxMessageBox("激活函数格式出错！\n请检查代码重新编译。");
+	}
+	return G_dot;
 }
 
 float CNeuralNetWorks::LinearCal(float w, float x, float b)
@@ -559,17 +645,22 @@ void CNeuralNetWorks::LR_RBTestPara(int n ,float alpha)
 CMatrixCal CNeuralNetWorks::HiddenLayerCal(CMatrixCal W, CMatrixCal A_last, CMatrixCal b)
 {
 	CMatrixCal WX = WX.Multiply(W,A_last); 
-	CMatrixCal Z = Z.Plus(WX,b);
+	CMatrixCal Z = Z.Plus_MatrixByColV(WX,b);
 	WX.Release();
+	WX.data = NULL;
 	return Z;
 }
+//2级函数，中间调用了HiddenLayerCal；
 CMatrixCal CNeuralNetWorks::FowardPro_ToNextLayer(CMatrixCal W, CMatrixCal A_last, CMatrixCal b,CString style)
 {
 	CMatrixCal Z = HiddenLayerCal(W,A_last,b);
 	CMatrixCal A = ActivationFunction(Z,style);
 	Z.Release();
+	Z.data = NULL;
 	return Z;
 }
+
+//2级函数，是FowardPro_ToNextLayer的sigmoid激活版，输出为二元结果
 CMatrixCal CNeuralNetWorks::OutLayer_Bin(CMatrixCal W, CMatrixCal A_last, CMatrixCal b)
 {
 	if(W.row_m != 1)
@@ -583,4 +674,623 @@ CMatrixCal CNeuralNetWorks::OutLayer_Bin(CMatrixCal W, CMatrixCal A_last, CMatri
 		CMatrixCal Y_hat = FowardPro_ToNextLayer(W, A_last, b,"sigmoid");
 		return Y_hat;
 	}
+}
+//dZ = A - Y = Y_hat - Y;针对输出层sigmoid激活方式的dZ值
+CMatrixCal CNeuralNetWorks::dZ_of_OutputLayer(CMatrixCal Y_hat, CMatrixCal Y)
+{
+	//Y_hat = A; dZ = A - Y = Y_hat - Y;
+	CMatrixCal dZ = dZ.Sub(Y_hat,Y);
+	return dZ;
+}
+
+//dW = 1/m * A_last·(dZ_out).T,仅针对sigmoid模式的输出层
+CMatrixCal CNeuralNetWorks::dW_of_OutputLayer(CMatrixCal A_previous, CMatrixCal dZ_out)
+{
+	CMatrixCal AT = A_previous.Transpose(A_previous);
+	CMatrixCal dW = dW.Multiply(dZ_out,AT);
+	float p = 1.0/dZ_out.col_n;
+	dW.MultiBy(p);
+	AT.Release();
+	AT.data = NULL;
+	return dW;
+}
+
+//db = sum(dZ_out)/m;仅针对sigmoid模式的输出层
+CMatrixCal CNeuralNetWorks::db_of_OutputLayer(CMatrixCal dZ_out)
+{
+	CMatrixCal db = dZ_out.SumRow_toCol(dZ_out);
+	float p = 1.0/dZ_out.col_n;
+	db.MultiBy(p);
+	return db;
+}
+
+//隐层的dZ计算，dZ = W[l+1层].T*dZ[l+1层]·g'(Z[本层])[本层]
+CMatrixCal CNeuralNetWorks::dZ_of_HiddenLayer(CMatrixCal W_later, CMatrixCal dZ_later, CMatrixCal A_current, CString style)
+{
+	CMatrixCal WT = W_later.Transpose(W_later);
+	CMatrixCal dZ = dZ.Multiply(WT,dZ_later);
+	CMatrixCal G_dot = Derivative_Activation(A_current, style);
+	dZ.DotBy(G_dot);
+	WT.Release();
+	WT.data = NULL;
+	G_dot.Release();
+	G_dot.data = NULL;
+
+	return dZ;
+}
+
+//dW = 1/m * A_last·(dZ_current).T,
+CMatrixCal CNeuralNetWorks::dW_of_HiddenLayer(CMatrixCal A_previous, CMatrixCal dZ_current)
+{
+	CMatrixCal AT = A_previous.Transpose(A_previous);
+	CMatrixCal dW = dW.Multiply(dZ_current,AT);
+	float p = 1.0/dZ_current.col_n;
+	dW.MultiBy(p);
+	AT.Release();
+	AT.data = NULL;
+	return dW;
+}
+
+//db = sum(dZ_current)/m;
+CMatrixCal CNeuralNetWorks::db_of_HiddenLayer(CMatrixCal dZ_current)
+{
+	CMatrixCal db = dZ_current.SumRow_toCol(dZ_current);
+	float p = 1.0/dZ_current.col_n;
+	db.MultiBy(p);
+	return db;
+}
+
+void CNeuralNetWorks::ReleaseNetConfig_NN(NetConfig_NN Config)
+{
+	Config.IS_INIT = FALSE;
+	delete []Config.node_num;
+	Config.node_num = NULL;
+	delete []Config.Act_style;
+	Config.Act_style = NULL;
+	Config.Loss.Release();
+}
+void CNeuralNetWorks::ReleasePara_NN(Parameters_NN &Para)
+{
+	Para.W.Release();
+	Para.W.data = NULL;
+	Para.b.Release();
+	Para.b.data = NULL;
+	Para.m_numofnode = 0;
+	Para.n_numofinput = 0;
+}
+void CNeuralNetWorks::ReleaseOthers_ResearveWB_Para_NN(Parameters_NN &Para)
+{
+	Para.Z.Release();
+	Para.Z.data = NULL;
+	Para.A.Release();
+	Para.A.data = NULL;
+	Para.dZ.Release();
+	Para.dZ.data = NULL;
+	Para.dW.Release();
+	Para.dW.data = NULL;
+	Para.db.Release();
+	Para.db.data = NULL;
+}
+CNeuralNetWorks::Parameters_NN* CNeuralNetWorks::InitParameters_NN(NetConfig_NN Config, int input_dimension)
+{
+	if(!Config.IS_INIT)
+	{
+		AfxMessageBox("网络配置未初始化，检查代码或操作");
+		return NULL;
+	}
+	else
+	{
+		Parameters_NN* Para = new Parameters_NN[Config.Layer_num];
+		Para[0].m_numofnode = Config.node_num[0];
+		Para[0].n_numofinput = input_dimension;
+		Para[0].W.InitMatrix(Para[0].m_numofnode,Para[0].n_numofinput,"gauss");
+		Para[0].W.ChangeName("第1层W矩阵");
+		Para[0].b.InitMatrix(Para[0].m_numofnode,1);
+		Para[0].b.ChangeName("第1层b矩阵");
+		for(int l=1;l<Config.Layer_num;l++)
+		{
+			Para[l].m_numofnode = Config.node_num[l];
+			Para[l].n_numofinput = Config.node_num[l-1];
+			Para[l].W.InitMatrix(Para[l].m_numofnode,Para[l].n_numofinput,"gauss");
+			Para[l].b.InitMatrix(Para[l].m_numofnode,1);
+
+			CString strW,strb;
+			strW.Format("第%d层W矩阵",l+1);
+			strb.Format("第%d层b矩阵",l+1);
+			Para[l].W.ChangeName(strW);
+			Para[l].b.ChangeName(strb);
+		}
+		return Para;
+	}
+}
+
+//X:输入数据，维度为input_dimension*m,Y:标准二值数据 Config:配置信息，生成训练好的参数
+CNeuralNetWorks::Parameters_NN* CNeuralNetWorks::ParaTrain_of_NN(NetConfig_NN Config, CMatrixCal X, CMatrixCal Y)
+{
+	int m = X.col_n;
+	int input_dimension = X.row_m;
+	Parameters_NN* Para = InitParameters_NN(Config,input_dimension);//初始化所有Wb和
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//Parameters_NN* Para = new Parameters_NN[2];
+	//Para[0].W.InitMatrix(4,2);
+	//Para[0].b.InitMatrix(4,1);
+	//Para[1].W.InitMatrix(1,4);
+	//Para[1].b.InitMatrix(1,1);
+
+	//Para[0].W.data[0][0] = -0.00416758;
+	//Para[0].W.data[0][1] = -0.00056267;
+
+	//Para[0].W.data[1][0] = -0.02163196;
+	//Para[0].W.data[1][1] = 0.01640271;
+
+	//Para[0].W.data[2][0] = -0.01793436;
+	//Para[0].W.data[2][1] = -0.00841747;
+
+	//Para[0].W.data[3][0] = 0.00502881;
+	//Para[0].W.data[3][1] = -0.01245288;
+
+
+	//Para[1].W.data[0][0] = -0.01057952;
+	//Para[1].W.data[0][1] = -0.00909008;
+	//Para[1].W.data[0][2] = 0.00551454;
+	//Para[1].W.data[0][3] = 0.02292208;
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	for(int i=0;i<Config.n;i++)//迭代次数循环
+	{
+		//////////////////////一次正反向传播，生成所有的梯度；
+		//第一层
+		Para[0].Z = HiddenLayerCal(Para[0].W, X, Para[0].b);
+		Para[0].A = ActivationFunction(Para[0].Z,Config.Act_style[0]);
+		/*if(i>=5)
+		{
+			CString str;
+			str.Format("第%d次迭代，第%d层Z矩阵",i,Config.Layer_num-2);
+			Para[Config.Layer_num-2].Z.ChangeName(str);
+			Para[Config.Layer_num-2].Z.ShowDataShort();
+			Para[0].Z.ShowData(3,5);
+
+			str.Format("第%d次迭代，第%d层A矩阵",i,Config.Layer_num-2);
+			Para[Config.Layer_num-2].A.ChangeName(str);
+			Para[Config.Layer_num-2].A.ShowDataShort();
+			Para[0].A.ShowData(3,5);
+		}*/
+		//层循环
+		//正向传播
+		for(int l=1;l<Config.Layer_num-1;l++)
+		{
+			Para[l].Z = HiddenLayerCal(Para[l].W, Para[l-1].A, Para[l].b);
+			Para[l].A = ActivationFunction(Para[l].Z,Config.Act_style[l]);
+		}
+		Para[Config.Layer_num-1].Z = HiddenLayerCal(Para[Config.Layer_num-1].W, Para[Config.Layer_num-2].A, Para[Config.Layer_num-1].b);
+		Para[Config.Layer_num-1].A =  ActivationFunction(Para[Config.Layer_num-1].Z,"sigmoid");		
+		float Cost =  Cost_LR(m, Para[Config.Layer_num-1].A, Y);
+		if(i%100 == 0)
+		{
+			int check = (i-i%100)/100;
+			Config.Loss.data[0][check] = Cost;
+		}
+		
+		//反向传播
+		//输出层
+		
+		Para[Config.Layer_num-1].dZ = dZ_of_OutputLayer(Para[Config.Layer_num-1].A,Y);
+		Para[Config.Layer_num-1].dW = dW_of_OutputLayer(Para[Config.Layer_num-2].A,Para[Config.Layer_num-1].dZ);
+		Para[Config.Layer_num-1].db = db_of_OutputLayer(Para[Config.Layer_num-1].dZ);
+		//层循环
+		for(int l=Config.Layer_num-2;l>0;l--)
+		{
+			Para[l].dZ = dZ_of_HiddenLayer(Para[l+1].W, Para[l+1].dZ,Para[l].A,Config.Act_style[l]);
+			Para[l].dW = dW_of_HiddenLayer(Para[l-1].A, Para[l].dZ);
+			Para[l].db = db_of_HiddenLayer(Para[l].dZ);
+		}
+		//第一层
+		Para[0].dZ = dZ_of_HiddenLayer(Para[1].W, Para[1].dZ,Para[0].A,Config.Act_style[0]);
+		Para[0].dW = dW_of_HiddenLayer(X, Para[0].dZ);
+		Para[0].db = db_of_HiddenLayer(Para[0].dZ);
+
+		
+		//if(i>=1346)
+		//{
+		//	Config.Loss.ShowData(1,i+1);
+		//	for(int l=0;l<Config.Layer_num;l++)
+		//	{
+		//		CString str;
+
+		//		str.Format("第%d次迭代，W%d矩阵",i+1,l+1);
+		//		Para[l].W.ChangeName(str);
+		//		Para[l].W.ShowData();
+		//		
+		//		
+		//		str.Format("第%d次迭代，b%d矩阵",i+1,l+1);
+		//		Para[l].b.ChangeName(str);
+		//		Para[l].b.ShowData();
+		//		
+		//		str.Format("第%d次迭代，Z%d矩阵",i+1,l+1);
+		//		Para[l].Z.ChangeName(str);
+		//		Para[l].Z.ShowData();
+
+		//		str.Format("第%d次迭代，A%d矩阵",i+1,l+1);
+		//		Para[l].A.ChangeName(str);
+		//		Para[l].A.ShowData();
+
+		//		//str.Format("第%d次迭代，第%d层dZ矩阵",i,l);
+		//		//Para[l].dZ.ChangeName(str);
+		//		//Para[l].dZ.ShowDataShort();
+
+		//		str.Format("第%d次迭代，dW%d矩阵",i+1,l+1);
+		//		Para[l].dW.ChangeName(str);
+		//		Para[l].dW.ShowData();
+
+		//		str.Format("第%d次迭代，db%d矩阵",i+1,l+1);
+		//		Para[l].db.ChangeName(str);
+		//		Para[l].db.ShowData();
+
+		//
+		//	}
+		//}
+		////////////////////////根据梯度更新；
+		for(int l=0;l<Config.Layer_num;l++)
+		{
+			Para[l].dW.MultiBy(Config.a);
+			Para[l].db.MultiBy(Config.a);
+			Para[l].W.SubBy(Para[l].dW);
+			Para[l].b.SubBy(Para[l].db);
+			//////////////////////////////////////////////////极值去除测试
+			//Para[l].W.Check_LargetValue(10);
+			//Para[l].b.Check_LargetValue(10);
+			ReleaseOthers_ResearveWB_Para_NN(Para[l]);			
+		}
+		/////////////////////////////////////////
+		
+	}
+	return Para;
+}
+void CNeuralNetWorks::NN_Test3()
+{
+	CDataSet m_data;
+	CMatrixCal XY = m_data.LoadLRTestData();
+	CMatrixCal X = m_data.ExtractX(XY);
+	CMatrixCal Y = m_data.ExtractY(XY);
+	X.ChangeName("X");
+	Y.ChangeName("Y");
+	XY.ChangeName("XY");
+	//XY.ShowData();
+	X.MultiBy(1.0/500);
+	X.PlusBy(-2.5);
+
+	
+
+
+
+	NetConfig_NN Config;
+	Config.IS_INIT = TRUE;
+	Config.Layer_num = 2;
+	Config.a = 0.1;
+	Config.n = 1;
+	Config.Act_style = new CString[Config.Layer_num];
+	for(int i=0;i<Config.Layer_num;i++)
+	{
+		Config.Act_style[i] = "tanh";
+	}
+	Config.Loss.InitMatrix(1,Config.n);
+	Config.Loss.ChangeName("损失矩阵");
+	Config.node_num = new int[Config.Layer_num];
+	Config.node_num[0] = 4;
+	Config.node_num[1] = 1;
+	//Config.node_num[2] = 1;
+	//Config.node_num[3] = 1;
+	//Config.node_num[4] = 1;
+	//Config.node_num[5] = 1;
+
+	Parameters_NN* Para = ParaTrain_of_NN(Config,X,Y);
+	/*Config.Loss.ShowDataShort();*/
+
+	CMatrixCal X_test(2,m_data.height_image*m_data.width_image);
+	Para[0].W.ShowDataShort();
+	Para[0].W.data[0][0] = -0.65848169;
+	Para[0].W.data[1][0] = -0.76204273;
+	Para[0].W.data[2][0] = 0.5792005;
+	Para[0].W.data[3][0] = 0.76773391;
+
+	Para[0].W.data[0][1] = 1.21866811;
+	Para[0].W.data[1][1] = 1.39377573;
+	Para[0].W.data[2][1] = -1.10397703;
+	Para[0].W.data[3][1] = -1.41477129;
+
+	Para[0].b.data[0][0] =  0.287592;
+	Para[0].b.data[1][0] =  0.3511264;
+	Para[0].b.data[2][0] = -0.2431246;
+	Para[0].b.data[3][0] = -0.35772805;
+
+	Para[1].W.data[0][0] = -2.45566237;
+	Para[1].W.data[0][1] = -3.27042274;
+	Para[1].W.data[0][2] = 2.00784958;
+	Para[1].W.data[0][3] = 3.36773273;
+
+	Para[1].b.data[0][0] = 0.20459656;
+	
+	
+	for(int m=0;m<m_data.height_image;m++)
+	{
+		for(int n=0;n<m_data.width_image;n++)
+		{
+			X_test.data[0][m*m_data.width_image+n] = m;
+			X_test.data[1][m*m_data.width_image+n] = n;
+		}
+	}
+
+	X_test.MultiBy(1.0/500);
+	X_test.PlusBy(-2.5);
+	Para[0].Z = HiddenLayerCal(Para[0].W, X_test, Para[0].b);
+	Para[0].A = ActivationFunction(Para[0].Z,Config.Act_style[0]);
+	//层循环
+	//正向传播
+	for(int l=1;l<Config.Layer_num-1;l++)
+	{
+		Para[l].Z = HiddenLayerCal(Para[l].W, Para[l-1].A, Para[l].b);
+		Para[l].A = ActivationFunction(Para[l].Z,Config.Act_style[l]);
+	}
+	Para[Config.Layer_num-1].Z = HiddenLayerCal(Para[Config.Layer_num-1].W, Para[Config.Layer_num-2].A, Para[Config.Layer_num-1].b);
+	CMatrixCal Y_test =  ActivationFunction(Para[Config.Layer_num-1].Z,"sigmoid");
+	
+
+
+
+
+
+
+
+
+	X_test.PlusBy(2.5);
+	X_test.MultiBy(500);
+	CMatrixCal XY_test = m_data.MergeXY(X_test,Y_test);
+	m_data.PostProcess_RB(XY_test);
+
+
+	XY.Release();
+	X.Release();
+	Y.Release();
+	XY_test.Release();
+	Y_test.Release();
+	X_test.Release();
+	for(int i=0;i>Config.Layer_num;i++)
+	{
+		ReleasePara_NN(Para[i]);
+	}
+	ReleaseNetConfig_NN(Config);
+}
+void CNeuralNetWorks::NN_Test2()
+{
+	NetConfig_NN Config;
+	Config.IS_INIT = TRUE;
+	Config.Layer_num = 2;
+	Config.a = 1.2;
+	Config.n = 10;
+	Config.Act_style = new CString[Config.Layer_num];
+	for(int i=0;i<Config.Layer_num;i++)
+	{
+		Config.Act_style[i] = "tanh";
+	}
+	Config.Loss.InitMatrix(1,Config.n);
+	Config.node_num = new int[Config.Layer_num];
+	Config.node_num[0] = 4;
+	Config.node_num[1] = 1;
+
+	CMatrixCal X(2,2);
+	X.data[0][0] = -0.41675785;
+	X.data[1][0] =-2.1361961;
+	X.data[0][1] = -0.05626683;
+	X.data[1][1] =1.64027081;
+	CMatrixCal Y(1,2);
+	Y.data[0][0] = 0;
+	Y.data[0][1] = 1;
+
+	X.MultiBy(1);
+
+	Parameters_NN* Para = ParaTrain_of_NN(Config,X,Y);
+	Config.Loss.ShowData();
+	Para[0].W.ShowData();
+	Para[0].b.ShowData();
+	Para[1].W.ShowData();
+	Para[1].b.ShowData();
+
+}
+void CNeuralNetWorks::NN_Test4()
+{
+	Parameters_NN* Para = new Parameters_NN[2];
+	Para[0].W.InitMatrix(4,2);
+	Para[0].b.InitMatrix(4,1);
+	Para[1].W.InitMatrix(1,4);
+	Para[1].b.InitMatrix(1,1);
+
+	Para[0].W.data[0][0] = -0.00416758;
+	Para[0].W.data[0][1] = -0.00056267;
+
+	Para[0].W.data[1][0] = -0.02163196;
+	Para[0].W.data[1][1] = 0.01640271;
+
+	Para[0].W.data[2][0] = -0.01793436;
+	Para[0].W.data[2][1] = -0.00841747;
+
+	Para[0].W.data[3][0] = 0.00502881;
+	Para[0].W.data[3][1] = -0.01245288;
+
+
+	Para[1].W.data[0][0] = -0.01057952;
+	Para[1].W.data[0][1] = -0.00909008;
+	Para[1].W.data[0][2] = 0.00551454;
+	Para[1].W.data[0][3] = 0.02292208;
+
+	CMatrixCal X(2,12);
+	CMatrixCal Y(1,12);
+	X.data[0][0] = 73;
+	X.data[0][1] = 68;
+	X.data[0][2] = 67;
+	X.data[0][3] = 64;
+	X.data[0][4] = 62;
+	X.data[0][5] = 60;
+	
+	X.data[0][6] = 56;
+	X.data[0][7] = 55;
+	X.data[0][8] = 47;
+	X.data[0][9] = 46;
+	X.data[0][10] = 36;
+	X.data[0][11] = 32;
+	
+	X.data[1][0] = 26;
+	X.data[1][1] = 38;
+	X.data[1][2] = 19;
+	X.data[1][3] = 26;
+	X.data[1][4] = 48;
+	X.data[1][5] = 38;
+	
+	X.data[1][6] = 56;
+	X.data[1][7] = 47;
+	X.data[1][8] = 57;
+	X.data[1][9] = 47;
+	X.data[1][10] =47;
+	X.data[1][11] = 57;
+	
+	Y.data[0][0] = 1;
+	Y.data[0][1] = 1;
+	Y.data[0][2] = 0;
+	Y.data[0][3] = 0;
+	Y.data[0][4] = 1;
+	Y.data[0][5] = 0;
+	Y.data[0][6] = 1;
+	Y.data[0][7] = 0;
+	Y.data[0][8] = 1;
+	Y.data[0][9] = 0;
+	Y.data[0][10] = 0;
+	Y.data[0][11] = 1;
+
+	CMatrixCal Z1 = HiddenLayerCal(Para[0].W,X,Para[0].b);
+	Z1.ChangeName("Z1");
+	Z1.ShowData();
+	CMatrixCal A1 = ActivationFunction(Z1,"tanh");
+	A1.ChangeName("A1");
+	A1.ShowData();
+	CMatrixCal Z2 = HiddenLayerCal(Para[1].W,A1,Para[1].b);
+	Z2.ChangeName("Z2");
+	Z2.ShowData();
+	CMatrixCal A2 = ActivationFunction(Z2,"sigmoid");
+	A2.ChangeName("A2");
+	A2.ShowData();
+	CMatrixCal dZ2 = dZ_of_OutputLayer(A2,Y);
+	dZ2.ChangeName("dZ2");
+	dZ2.ShowData();
+	CMatrixCal dW2 = dW_of_OutputLayer(A1,dZ2);
+	dW2.ChangeName("dW2");
+	dW2.ShowData();
+	CMatrixCal db2 = db_of_OutputLayer(dZ2);
+	db2.ChangeName("db2");
+	db2.ShowData();
+	CMatrixCal dZ1 = dZ_of_HiddenLayer(Para[1].W,dZ2,A1,"tanh");
+	dZ1.ChangeName("dZ1");
+	dZ1.ShowData();
+	CMatrixCal dW1 = dW_of_HiddenLayer(X,dZ1);
+	dW1.ChangeName("dW1");
+	dW1.ShowData();
+	CMatrixCal db1 = db_of_OutputLayer(dZ1);
+	db1.ChangeName("db1");
+	db1.ShowData();
+	
+	
+}
+void CNeuralNetWorks::NN_Test()
+{
+	CDataSet m_data;
+	CMatrixCal XY = m_data.LoadLRTestData();
+	CMatrixCal X = m_data.ExtractX(XY);
+	CMatrixCal Y = m_data.ExtractY(XY);
+	X.ChangeName("X");
+	Y.ChangeName("Y");
+	XY.ChangeName("XY");
+	//XY.ShowData();
+	
+
+	X.MultiBy(1.0/100);
+	X.PlusBy(-0.5);
+	
+	//X.ShowRowData(1);
+	//X.ShowRowData(2);
+	//Y.ShowData();
+
+
+
+	NetConfig_NN Config;
+	Config.IS_INIT = TRUE;
+	Config.Layer_num = 2;
+	Config.a = 1.2;
+	Config.n = 5000;
+	int loss_num = (Config.n - (Config.n%100))/100;
+	Config.Act_style = new CString[Config.Layer_num];
+	for(int i=0;i<Config.Layer_num;i++)
+	{
+		Config.Act_style[i] = "ReLU";
+	}
+	Config.Loss.InitMatrix(1,loss_num);
+	Config.Loss.ChangeName("损失矩阵");
+	Config.node_num = new int[Config.Layer_num];
+	Config.node_num[0] = 16;
+	Config.node_num[1] = 1;
+	//Config.node_num[2] = 1;
+	//Config.node_num[3] = 1;
+	//Config.node_num[4] = 1;
+	//Config.node_num[5] = 1;
+
+	Parameters_NN* Para = ParaTrain_of_NN(Config,X,Y);
+	Config.Loss.ShowData();
+
+	CMatrixCal X_test(2,m_data.height_image*m_data.width_image);
+	
+	
+	for(int m=0;m<m_data.height_image;m++)
+	{
+		for(int n=0;n<m_data.width_image;n++)
+		{
+			X_test.data[0][m*m_data.width_image+n] = m;
+			X_test.data[1][m*m_data.width_image+n] = n;
+		}
+	}
+
+	X_test.MultiBy(1.0/100);
+	X_test.PlusBy(-0.5);
+	Para[0].Z = HiddenLayerCal(Para[0].W, X_test, Para[0].b);
+	Para[0].A = ActivationFunction(Para[0].Z,Config.Act_style[0]);
+	//层循环
+	//正向传播
+	for(int l=1;l<Config.Layer_num-1;l++)
+	{
+		Para[l].Z = HiddenLayerCal(Para[l].W, Para[l-1].A, Para[l].b);
+		Para[l].A = ActivationFunction(Para[l].Z,Config.Act_style[l]);
+	}
+	Para[Config.Layer_num-1].Z = HiddenLayerCal(Para[Config.Layer_num-1].W, Para[Config.Layer_num-2].A, Para[Config.Layer_num-1].b);
+	CMatrixCal Y_test =  ActivationFunction(Para[Config.Layer_num-1].Z,"sigmoid");
+
+
+
+
+
+
+
+
+
+	X_test.PlusBy(0.5);
+	X_test.MultiBy(100);
+	CMatrixCal XY_test = m_data.MergeXY(X_test,Y_test);
+	m_data.PostProcess_RB(XY_test);
+
+
+	XY.Release();
+	X.Release();
+	Y.Release();
+	XY_test.Release();
+	Y_test.Release();
+	X_test.Release();
+	for(int i=0;i>Config.Layer_num;i++)
+	{
+		ReleasePara_NN(Para[i]);
+	}
+	ReleaseNetConfig_NN(Config);
 }
